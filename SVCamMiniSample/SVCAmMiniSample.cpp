@@ -31,8 +31,8 @@ int SaveImage(size_t _Width, size_t _Height, unsigned char *ImageData)
 		// save to file_path
 		__int64 now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		string fn = "C:\\images\\" + std::to_string(now) + ".bmp";
-		FILE* pFile;
-		errno_t errorCode = fopen_s(&pFile, fn.c_str(), "w");
+		FILE* pFile = fopen(fn.c_str(), "wb");
+		//errno_t errorCode = fopen_s(&pFile, fn.c_str(), "w");
 
 		if (pFile == NULL)
 		{

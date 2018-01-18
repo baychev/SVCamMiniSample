@@ -83,7 +83,7 @@ unsigned long __stdcall AcquisitionThread(void *context)
 			int pDestLength = 3 * NewImageInfo->iSizeX * NewImageInfo->iSizeY;
 			unsigned char * ImageData_RGB = new unsigned char [pDestLength];
 			SVUtilBufferBayerToRGB(*NewImageInfo, ImageData_RGB, pDestLength);
-			SaveImage(NewImageInfo->iSizeX, NewImageInfo->iSizeY, ImageData_RGB);
+			//SaveImage(NewImageInfo->iSizeX, NewImageInfo->iSizeY, ImageData_RGB);
 			svacq->imageBufferInfo.pop_front();
 			delete NewImageInfo;
 		}
@@ -276,7 +276,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	cam->sv_cam_acq->AcquisitionStart(bufcount);
 
 	// start acquisition Thread
-	HANDLE acquisitionThread = CreateThread(NULL, 0, AcquisitionThread, (void *)sv_cam->sv_cam_list.front()->sv_cam_acq, 0, NULL);
+	//HANDLE acquisitionThread = CreateThread(NULL, 0, AcquisitionThread, (void *)sv_cam->sv_cam_list.front()->sv_cam_acq, 0, NULL);
 
 	// grabe images (software Trigger).
 	hFeature = NULL;
@@ -284,13 +284,34 @@ int _tmain(int argc, _TCHAR* argv[])
 	SVFeatureGetByName(cam->sv_cam_acq->hRemoteDev, "TriggerSoftware", &hFeature);
 
 	// grabe 10 images
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		printf("----------------------------------\n");
 		SVFeatureCommandExecute(cam->sv_cam_acq->hRemoteDev, hFeature, timeOut);
 		printf("Trigger %-10d \n", i + 1);
 		Sleep(500);
 	}
+
+
+
+	if (cam->sv_cam_acq->imageBufferInfo.size() != 0)
+	{
+		// Obtain the image data pointer and characteristics
+		SV_BUFFER_INFO  *NewImageInfo = cam->sv_cam_acq->imageBufferInfo.front();
+		printf("new image:  %d \n", NewImageInfo->pImagePtr);
+		// assuming RGB 
+		int pDestLength = 3 * NewImageInfo->iSizeX * NewImageInfo->iSizeY;
+		unsigned char * ImageData_RGB = new unsigned char[pDestLength];
+		SVUtilBufferBayerToRGB(*NewImageInfo, ImageData_RGB, pDestLength);
+		SaveImage(NewImageInfo->iSizeX, NewImageInfo->iSizeY, ImageData_RGB);
+		cam->sv_cam_acq->imageBufferInfo.pop_front();
+		delete NewImageInfo;
+	}
+
+	/*WaitForSingleObject(cam->sv_cam_acq->m_newImage, 1000);
+	ResetEvent(cam->sv_cam_acq->m_newImage);
+
+	CloseHandle(acquisitionThread);*/
 
 	cam->sv_cam_acq->AcquisitionStop();
 	//4)************************close camera and free all resources*********************
